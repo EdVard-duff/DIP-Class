@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# python .\download-Faceforensics.py D:\ -d all -c c23 -t videos -n 10
 """ Downloads FaceForensics++ and Deep Fake Detection public data release
 Example usage:
     see -h or https://github.com/ondyari/FaceForensics
@@ -16,6 +17,19 @@ import random
 from tqdm import tqdm
 from os.path import join
 
+import http.client
+http.client.HTTPConnection._http_vsn = 10
+http.client.HTTPConnection._http_vsn_str = 'HTTP/1.0'
+
+def getjson(url):
+    try:
+        with urllib.request.urlopen(url) as f:
+            res = f.read().decode('utf-8')
+    except Exception as e:
+        page = e.partial
+        res = page.decode('utf-8')
+
+    return res 
 
 # URLs and filenames
 FILELIST_URL = 'misc/filelist.json'
@@ -177,23 +191,26 @@ def main(args):
 
         # Get filelists and video lenghts list from server
         if 'DeepFakeDetection' in dataset_path or 'actors' in dataset_path:
-        	filepaths = json.loads(urllib.request.urlopen(args.base_url + '/' +
-                DEEPFEAKES_DETECTION_URL).read().decode("utf-8"))
-        	if 'actors' in dataset_path:
-        		filelist = filepaths['actors']
-        	else:
-        		filelist = filepaths['DeepFakesDetection']
+            url = args.base_url + '/' + DEEPFEAKES_DETECTION_URL
+            
+            filepaths = json.loads(getjson(url))
+            if 'actors' in dataset_path:
+                filelist = filepaths['actors']
+            else:
+                filelist = filepaths['DeepFakesDetection']
+
         elif 'original' in dataset_path:
             # Load filelist from server
-            file_pairs = json.loads(urllib.request.urlopen(args.base_url + '/' +
-                FILELIST_URL).read().decode("utf-8"))
+            url = args.base_url + '/' + FILELIST_URL
+            file_pairs = json.loads(getjson(url))
             filelist = []
             for pair in file_pairs:
             	filelist += pair
         else:
             # Load filelist from server
-            file_pairs = json.loads(urllib.request.urlopen(args.base_url + '/' +
-                FILELIST_URL).read().decode("utf-8"))
+            url = args.base_url + '/' + FILELIST_URL
+            file_pairs = json.loads(getjson(url))
+
             # Get filelist
             filelist = []
             for pair in file_pairs:
