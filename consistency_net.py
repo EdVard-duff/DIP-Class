@@ -1,10 +1,12 @@
 from typing import ForwardRef
 import torch
+import numpy as np
 from torch import nn
 from torch._C import import_ir_module
 import torch.nn.functional as F
 import torchvision
 import os
+
 
 # 直接从视频里提取了人脸，没有用mask,256,256,3
 # 原始数据的数据增强
@@ -16,10 +18,19 @@ class Config(object):
     backbone = 'resnet18'
     class_num = 2
     without_mask =  True
-    embed_size = 64 # 不确定
+    embed_size = 16 # 不确定
     loss_pcl = 10
+    batch_size = 128
 
 opt = Config()
+
+def pairwise_similarity(x): # b,c',16,16
+    y = torch.zeros(size=(16,16,opt.batch_size,16,16)) # 16,16,b,16,16
+    for i in range(16):
+        for j in range(16):
+            y[i,j,:,:,:] = torch.sum(x[:,:,i,j,None,None] * x,dim=1)/np.sqrt(opt.embed_size)
+    y = torch.sigmoid(y).permute(2,0,1,3,4)
+    return y
 
 class SelfConsistNet(nn.Module):
     def __init__(self,backbone_pretrained = True) -> None:
@@ -40,8 +51,7 @@ class SelfConsistNet(nn.Module):
         '''
         consistency
         '''
-        
-        self.embed_layer = nn.Linear(self.feature_size,opt.embed_size,bias=False)
+        self.embedding_layer = nn.Conv2d(256,opt.embed_size,kernel_size=(1,1))
 
         '''
         Class prediction
@@ -73,7 +83,13 @@ class SelfConsistNet(nn.Module):
         '''
         cal consistency
         '''
-        return predict_feature, prediction 
+        embed_feature = self.embedding_layer(source_feature) #b,opt.embed_size,16,16
+        consistency_volume = pairwise_similarity(embed_feature) # b,16,16,16,16 # 1表示一致，0表示不一致
+        
+        fused_volume = torch.sum(consistency_volume,dim=(3,4)) 
+
+        return prediction , consistency_volume
+
 
 
 if __name__ == '__main__':
