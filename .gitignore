@@ -130,4 +130,6 @@ dmypy.json
 
 
 dlib-19.22/
-.ipynb
+*.ipynb
+I2G/*.jpg
+I2G/*.npy
