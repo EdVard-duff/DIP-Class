@@ -4,18 +4,9 @@ import cv2
 import numpy as np
 import glob
 
-from numpy.core.numeric import indices
-from numpy.lib.arraypad import _set_reflect_both
-from numpy.lib.function_base import select
-from numpy.lib.polynomial import polymul
-from numpy.lib.twodim_base import tri
-
 # 读取示例图像
-
-src = 'man2'
-dst = 'female'
-filename_src = 'I2G/' + src + '.jpg'
-filename_dst = 'I2G/' + dst + '.jpg'
+filename_src = "I2G/man.jpeg"
+filename_dst = "I2G/man2.jpeg"
 
 img_src = cv2.imread(filename_src)
 img_dst = cv2.imread(filename_dst)
@@ -24,17 +15,15 @@ img_dst= cv2.resize(img_dst,(256,256),interpolation= cv2.INTER_AREA)
 
 img_dst_warped = np.copy(img_dst) # 目标脸的备份
 
-points_src = np.load('I2G/'+ src + '.npy')
+idx_fig = 1
+
+points_src = np.load('I2G/man.npy')
 points_src = points_src.astype('int')
 points_src = points_src.tolist() # ndarray 不支持插入
 
-points_dst = np.load('I2G/'+ dst + '.npy')
+points_dst = np.load('I2G/man2.npy')
 points_dst = points_dst.astype('int')
 points_dst = points_dst.tolist() 
-
-selected_points_dst = points_dst[0:61]
-for i in [62,64,66]:
-    selected_points_dst.append(points_dst[i])
 
 #print(points_dst)
 # convex 包含的点集
@@ -49,8 +38,6 @@ hull_pt_indices = hull_pt_indices.flatten()  # 凸包的下标
 for idx_pt in hull_pt_indices:
     hull_pt_src.append(points_src[idx_pt])
     hull_pt_dst.append(points_dst[idx_pt])
-
-#print(hull_pt_dst)
 
 def draw_delaunay(img,shape):
     rect = (0, 0, 256,256)
@@ -122,11 +109,7 @@ def cal_delaunay_tri(rect, points):
 
 rect = (0,0,256,256)
 lst_delaunay_tri_pt_indices = cal_delaunay_tri(rect, hull_pt_dst) # 凸包三角剖分对应的顶点下标
-all_tri_indices = cal_delaunay_tri(rect,selected_points_dst)
-# 试一下优化嘴巴的顶点下标， https://blog.csdn.net/zhaoyin214/article/details/88196575 以及一些local的参数调整
-#print(tmp1,'\n')
-#print(lst_delaunay_tri_pt_indices)
- 
+# print(lst_delaunay_tri_pt_indices) 
 #----------------------------------------------------------------------
 def warp_affine(img_src, tri_src, tri_dst, size):
     """仿射"""
@@ -179,13 +162,15 @@ def warp_tri(img_src, img_dst, tri_src, tri_dst, alpha=1) :
         img_src_rect_warpped * mask
     
 # 狄洛尼三角剖分仿射
+for tri_pt_indices in lst_delaunay_tri_pt_indices:
+    
+    # 源图像、目标图像三角顶点坐标
+    tri_src = [hull_pt_src[tri_pt_indices[idx]] for idx in range(3)]
+    tri_dst = [hull_pt_dst[tri_pt_indices[idx]] for idx in range(3)]
 
-for tri_pt_indices in all_tri_indices:
-    tri_src = [points_src[tri_pt_indices[idx]] for idx in range(3)]
-    tri_dst = [points_dst[tri_pt_indices[idx]] for idx in range(3)] 
     warp_tri(img_src, img_dst_warped, tri_src, tri_dst, 1)
-# 和谐化
 
+# 和谐化
 mask = np.zeros(img_dst.shape, dtype=img_dst.dtype)
 cv2.fillConvexPoly(mask, np.array(hull_pt_dst), (255, 255, 255)) #蒙版
 
@@ -204,5 +189,4 @@ img_dst_mono_grad = cv2.seamlessClone(img_dst_warped, img_dst,
 # img_dst_src_grad, img_dst_mix_grad, img_dst_mono_grad])
 
 cv2.imshow('I',np.hstack([img_dst, img_dst_warped, img_dst_src_grad, img_dst_mix_grad, img_dst_mono_grad]))
-cv2.imwrite('I2G/tmp.jpg',img_dst_mix_grad)
 cv2.waitKey(0)

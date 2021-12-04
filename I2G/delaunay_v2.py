@@ -5,15 +5,13 @@ import numpy as np
 import glob
 
 from numpy.core.numeric import indices
-from numpy.lib.arraypad import _set_reflect_both
-from numpy.lib.function_base import select
 from numpy.lib.polynomial import polymul
 from numpy.lib.twodim_base import tri
 
 # 读取示例图像
 
-src = 'man2'
-dst = 'female'
+src = 'man'
+dst = 'man7'
 filename_src = 'I2G/' + src + '.jpg'
 filename_dst = 'I2G/' + dst + '.jpg'
 
@@ -31,10 +29,6 @@ points_src = points_src.tolist() # ndarray 不支持插入
 points_dst = np.load('I2G/'+ dst + '.npy')
 points_dst = points_dst.astype('int')
 points_dst = points_dst.tolist() 
-
-selected_points_dst = points_dst[0:61]
-for i in [62,64,66]:
-    selected_points_dst.append(points_dst[i])
 
 #print(points_dst)
 # convex 包含的点集
@@ -122,8 +116,7 @@ def cal_delaunay_tri(rect, points):
 
 rect = (0,0,256,256)
 lst_delaunay_tri_pt_indices = cal_delaunay_tri(rect, hull_pt_dst) # 凸包三角剖分对应的顶点下标
-all_tri_indices = cal_delaunay_tri(rect,selected_points_dst)
-# 试一下优化嘴巴的顶点下标， https://blog.csdn.net/zhaoyin214/article/details/88196575 以及一些local的参数调整
+all_tri_indices = cal_delaunay_tri(rect,points_dst)
 #print(tmp1,'\n')
 #print(lst_delaunay_tri_pt_indices)
  
@@ -179,6 +172,15 @@ def warp_tri(img_src, img_dst, tri_src, tri_dst, alpha=1) :
         img_src_rect_warpped * mask
     
 # 狄洛尼三角剖分仿射
+'''
+for tri_pt_indices in lst_delaunay_tri_pt_indices:
+    
+    # 源图像、目标图像三角顶点坐标
+    tri_src = [hull_pt_src[tri_pt_indices[idx]] for idx in range(3)]
+    tri_dst = [hull_pt_dst[tri_pt_indices[idx]] for idx in range(3)]
+
+    warp_tri(img_src, img_dst_warped, tri_src, tri_dst, 1)
+'''
 
 for tri_pt_indices in all_tri_indices:
     tri_src = [points_src[tri_pt_indices[idx]] for idx in range(3)]

@@ -63,7 +63,7 @@ def visualize_facial_landmarks(image, shape, colors=None, alpha=0.75):
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor('I2G\shape_predictor_68_face_landmarks.dat')
 
-img= cv2.imread('I2G\man.jpeg') #h,w,3
+img= cv2.imread('I2G\man7.jpg') #h,w,3
 h,w = img.shape[:2]
 img = cv2.resize(img,(256,256),interpolation= cv2.INTER_AREA)
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -78,6 +78,8 @@ hull = cv2.convexHull(shape)
 cv2.drawContours(img, [hull],-1,(0,0,0),-1)
 cv2.imshow('Image',img)
 cv2.waitKey(0)
+
+np.save('I2G\man7.npy',shape)
 
 '''  单独展示的部分
      for (i,rect) in enumerate(dets):
