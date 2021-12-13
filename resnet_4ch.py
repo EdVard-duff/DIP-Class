@@ -164,21 +164,11 @@ def resnet(layers, pretrained=False, pretrained_weight=None, **kwargs):
         model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
     else:
         raise Exception('Unsupport resnet layers numbers: ', layers)
-    if opt.without_mask:
-        if pretrained:
-            model.load_state_dict(torch.load(pretrained_weight))
-            print('loaded pretrained resnet{} from {}'.format(layers, pretrained_weight))
-    else:
-        model.conv1 = nn.Conv2d(4, 64, kernel_size=7, stride=2, padding=3, bias=False)
-        if pretrained:
-            pretrained_state_dict = torch.load(pretrained_weight)
-            conv1 = pretrained_state_dict['conv1.weight']
-            new = torch.zeros(64, 1, 7, 7)
-            for i, output_channel in enumerate(conv1):
-                new[i] = 0.299 * output_channel[0] + 0.587 * output_channel[1] + 0.114 * output_channel[2]
-            pretrained_state_dict['conv1.weight'] = torch.cat((conv1, new), dim=1)
-            model.load_state_dict(pretrained_state_dict)
-            print('loaded pretrained resnet{} from {}'.format(layers, pretrained_weight))
+    
+    if pretrained:
+        model.load_state_dict(torch.load(pretrained_weight))
+        print('loaded pretrained resnet{} from {}'.format(layers, pretrained_weight))
+
     return model
 
 
