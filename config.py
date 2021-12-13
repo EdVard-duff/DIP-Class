@@ -4,6 +4,9 @@ class Config(object):
 
     backbone = 'resnet34'
     class_num = 2
-    without_mask = True
 
+    lr_rate = 5e-5
+    betas = (0.9,0.999)
+
+    loss_weight = 10
 opt = Config()

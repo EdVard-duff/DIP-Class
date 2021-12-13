@@ -12,8 +12,8 @@ from numpy.lib.twodim_base import tri
 
 # 读取示例图像
 
-src = 'man2'
-dst = 'female'
+src = 'man'
+dst = 'man2'
 filename_src = 'I2G/' + src + '.jpg'
 filename_dst = 'I2G/' + dst + '.jpg'
 
@@ -32,8 +32,9 @@ points_dst = np.load('I2G/'+ dst + '.npy')
 points_dst = points_dst.astype('int')
 points_dst = points_dst.tolist() 
 
+# 嘴巴
 selected_points_dst = points_dst[0:61]
-for i in [62,64,66]:
+for i in []:
     selected_points_dst.append(points_dst[i])
 
 #print(points_dst)
@@ -203,6 +204,7 @@ img_dst_mono_grad = cv2.seamlessClone(img_dst_warped, img_dst,
 #plot_imgs(idx_fig, [img_src, img_dst, img_dst_warped, 
 # img_dst_src_grad, img_dst_mix_grad, img_dst_mono_grad])
 
-cv2.imshow('I',np.hstack([img_dst, img_dst_warped, img_dst_src_grad, img_dst_mix_grad, img_dst_mono_grad]))
+cv2.imshow('I',np.hstack([img_src, img_dst, img_dst_src_grad, img_dst_mix_grad, img_dst_mono_grad]))
+cv2.imwrite('I2G/opt_comparsion1.jpg',np.hstack([img_src, img_dst, img_dst_src_grad, img_dst_mix_grad, img_dst_mono_grad]))
 cv2.imwrite('I2G/tmp.jpg',img_dst_mix_grad)
 cv2.waitKey(0)
