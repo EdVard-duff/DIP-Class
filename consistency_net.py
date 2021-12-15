@@ -62,7 +62,7 @@ class SelfConsistNet(nn.Module):
 
         
 
-    def forward(self,img,w,h):
+    def forward(self,img):
         # img:256,256,3
         batch_size = img.shape[0] # 128
         '''

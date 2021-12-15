@@ -29,7 +29,7 @@ def train(train_loader, net, criterion_of_class, criterion_of_consis, optimizer,
     forward_time = time.time()
     batch_time   = time.time()
 
-    for batch_index, (img, label, w , h) in enumerate(train_loader):
+    for batch_index, (img, mask, label, video_name) in enumerate(train_loader):
         img, w, h = img.to(device), w.to(device), h.to(device)
 
         forward_time = time.time()
@@ -60,8 +60,24 @@ def train(train_loader, net, criterion_of_class, criterion_of_consis, optimizer,
         fetchdata_time = time.time()
 
 #待写
-def test():
-    pass 
+def test(test_loader, net, criterion_of_class, criterion_of_consis, optimizer, epoch, device, writer):
+    # 设定全局的指标
+    net.eval()
+    test_loss = 0
+    total = 0
+    preds = []
+    gts = []
+
+    print("===  Validate [{}/{}] ===".format(epoch + 1, opt.epochs))
+    with torch.no_grad():
+        for batch_index, (img, label, video_name) in enumerate(tqdm(test_loader)):
+            img, label = img.to(device), label.to(device)
+
+            logits = net(img)
+
+            preds.extend(logits.max(1)[1].cpu().numpy())
+            gts.extend(label.cpu().numpy())
+            total += label.size(0)
 
 if __name__ == "__main__":
     device = torch.device("cuda:{}".format(opt.gpu_id))
