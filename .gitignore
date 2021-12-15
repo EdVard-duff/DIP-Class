@@ -135,3 +135,5 @@ I2G/*.jpg
 I2G/*.npy
 tmp.npy
 code_v1/*
+dataset/*
+experiments/*

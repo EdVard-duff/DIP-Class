@@ -126,10 +126,9 @@ class ImageDataset_for_test(Dataset):
         for i in range(len(self.video_path)):
             img_list = os.listdir(self.video_path[i])
             for img_name in img_list:
-                prefix = img_name.split('.jpg')[0]   
                 self.images_path.append(os.path.join(self.video_path[i],img_name))
                 self.video.append(self.video_path[i])
-                self.labels.append(0)
+                self.labels.append(1) # 假设测试集全是假的图片了，暂时不考虑origin_test.csv
 
 
         # 这部分还可以添加其它的数据增强的组件
