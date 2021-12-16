@@ -2,7 +2,7 @@ import os
 class Config(object):
     video_root = './dataset' 
     origin_train = './dataset/origin_train.csv'
-    
+    origin_test = './dataset/origin_test.csv'
 
     pretrained_model_path = './pretrained_models'
 
@@ -11,18 +11,21 @@ class Config(object):
     batch_size = 64
 
     #train
+    gpu_id = 0
     img_per_frame = 1 # 每个视频选取的图片数目
     base_lr = 5e-5
-    #lr_milestones = [10, 16]
-    #lr_gamma = 0.1
-    epochs = 150
+    lr_milestones = [10, 16]
+    lr_gamma = 0.1
+    epochs = 1
     eval_freq = 1
     save_freq = 5
     display_freq = 10
     betas = (0.9,0.999)
-
+    batch_size = 128
+    
     # baseline
     backbone = 'resnet34'
+    embed_size = 64 # 不确定
     loss_weight = 10
     deepfake_method_str = ['deepfakes','face2face','faceswap','neural']
     deepfake_method = 0 # one of [None,0,1,2,3]

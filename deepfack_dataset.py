@@ -106,6 +106,14 @@ class ImageDataset_for_test(Dataset):
         self.video_path = []
         self.video_type = []
 
+        with open(opt.origin_test) as f:
+            reader = csv.reader(f)
+            reader = list(reader)
+            reader = reader[1:]
+        for row in reader:
+            self.video_path.append(row[0])
+            self.video_type.append(0)
+
         #添加伪造方法
         if opt.deepfake_method is None:
             pass
@@ -128,8 +136,12 @@ class ImageDataset_for_test(Dataset):
             for img_name in img_list:
                 self.images_path.append(os.path.join(self.video_path[i],img_name))
                 self.video.append(self.video_path[i])
-                self.labels.append(1) # 假设测试集全是假的图片了，暂时不考虑origin_test.csv
-
+                if self.video_type[i] == 0:
+                    self.labels.append(0)
+                    self.img_type.append(0)
+                else:
+                    self.labels.append(1)
+                    self.img_type.append(1)
 
         # 这部分还可以添加其它的数据增强的组件
         if opt.imageNet_normalization:
@@ -173,8 +185,19 @@ def get_test_dataloader():
     return test_loader
 
 if __name__ == '__main__':
+    '''
     train_set = ImageDataset()
 
     img, mask, label, video_name = train_set.__getitem__(0)
-    print(img)
+    #print(img)
     #print(train_set.mask_path)
+    test_set = ImageDataset_for_test()
+    img, label, video_name = test_set.__getitem__(0)
+    print(video_name)
+
+    test_set    
+    '''
+    train_loader = get_train_dataloader()
+    for batch_index, (img, mask, label, video_name) in enumerate(train_loader):
+        print(batch_index)
+        print(img.shape)
