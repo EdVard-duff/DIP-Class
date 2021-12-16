@@ -216,12 +216,10 @@ if __name__ == "__main__":
     writer = SummaryWriter(log_dir=opt.log_dir)
     for epoch in range(opt.epochs):
         train(train_loader, net, criterion_for_class, criterion_for_consis, optimizer, epoch, device, writer)
-        '''   
         if epoch == 0 or (epoch + 1) % opt.eval_freq == 0 or epoch == opt.epochs - 1:
             
             test_loader = get_test_dataloader()
             test(test_loader, net, criterion_for_class, criterion_for_consis, optimizer, epoch, device, writer, test_video_list)
             write_test_results()            
-            '''
         lr_scheduler.step()
     #print(("=======  Training Finished.Best AUC={:.3f}, best AP={:.1%}========".format(best_auc, best_ap)))
