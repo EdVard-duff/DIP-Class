@@ -24,6 +24,7 @@ class ImageDataset(Dataset):
 
         self.video_path = []
         self.video_type = []
+        self.npy_path = []
         #添加真实图片
         with open(opt.origin_train) as f:
             reader = csv.reader(f)
@@ -31,6 +32,7 @@ class ImageDataset(Dataset):
             reader = reader[1:]
         for row in reader:
             self.video_path.append(row[0])
+            self.npy_path.append(row[1]) 
             self.video_type.append(0)
 
         #添加伪造方法
@@ -55,7 +57,7 @@ class ImageDataset(Dataset):
             img_list = os.listdir(self.video_path[i])
             random.shuffle(img_list)
             for img_name in img_list[:opt.img_per_frame]:
-                prefix = img_name.split('.jpg')[0]   
+                #prefix = img_name.split('.jpg')[0]   
                 self.images_path.append(os.path.join(self.video_path[i],img_name))
                 self.video.append(self.video_path[i])
                 if self.video_type[i] == 0:
@@ -65,8 +67,8 @@ class ImageDataset(Dataset):
                 else:
                     self.labels.append(1)
                     self.img_type.append(1)
-                    self.mask_path.append(os.path.join(self.video_path[i],
-                                        prefix+'.npy'))
+                    self.mask_path.append(os.path.join(self.npy_path[i],
+                                        img_name+'.npy'))
 
         # 这部分还可以添加其它的数据增强的组件
         if opt.imageNet_normalization:
@@ -105,7 +107,7 @@ class ImageDataset_for_test(Dataset):
 
         self.video_path = []
         self.video_type = []
-
+        
         with open(opt.origin_test) as f:
             reader = csv.reader(f)
             reader = list(reader)

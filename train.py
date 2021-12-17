@@ -210,11 +210,10 @@ if __name__ == "__main__":
     # 待找合适的API
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=opt.lr_milestones, gamma=opt.lr_gamma)
     
-    train_loader = get_train_dataloader()
-
     print(("=======  Training  ======="))
     writer = SummaryWriter(log_dir=opt.log_dir)
     for epoch in range(opt.epochs):
+        train_loader = get_train_dataloader()
         train(train_loader, net, criterion_for_class, criterion_for_consis, optimizer, epoch, device, writer)
         if epoch == 0 or (epoch + 1) % opt.eval_freq == 0 or epoch == opt.epochs - 1:
             
@@ -222,4 +221,4 @@ if __name__ == "__main__":
             test(test_loader, net, criterion_for_class, criterion_for_consis, optimizer, epoch, device, writer, test_video_list)
             write_test_results()            
         lr_scheduler.step()
-    #print(("=======  Training Finished.Best AUC={:.3f}, best AP={:.1%}========".format(best_auc, best_ap)))
+    print(( "=======  Training Finished.Best AUC={:.3f}, best AP={:.1%}========".format(best_auc, best_ap)))

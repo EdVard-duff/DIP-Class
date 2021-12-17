@@ -12,11 +12,11 @@ class Config(object):
 
     #train
     gpu_id = 0
-    img_per_frame = 1 # 每个视频选取的图片数目
+    img_per_frame = 32 # 每个视频选取的图片数目
     base_lr = 5e-5
     lr_milestones = [10, 16]
     lr_gamma = 0.1
-    epochs = 1
+    epochs = 150
     eval_freq = 1
     save_freq = 5
     display_freq = 10
