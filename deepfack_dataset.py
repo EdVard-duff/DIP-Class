@@ -14,8 +14,11 @@ import torchvision.transforms as transforms
 from PIL import Image
 from torch.functional import Tensor
 from torch.utils.data import DataLoader, Dataset
+import elasticdeform
 
 from config import opt
+from i2g import d_model, blend_src2dst, cal_landmark
+
 torch.random.manual_seed(1)
 
 class ImageDataset(Dataset):
@@ -77,22 +80,74 @@ class ImageDataset(Dataset):
                 transforms.ToTensor(), # 归一化到0-1之间了
                 transforms.Normalize([0.485,0.456,0.406], [0.229, 0.224, 0.225], inplace=True) 
             ])
+            self.i2g_normalization = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize([0.485,0.456,0.406], [0.229, 0.224, 0.225], inplace=True), 
+            ])
         else:
             self.img_transform = transforms.Compose([
                 transforms.Resize((256,256)),
                 transforms.ToTensor(),
             ])
+            self.i2g_normalization = transforms.Compose([
+                transforms.ToTensor(),
+            ])
+
+        self.mask_trans = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize((16,16))
+        ])
+
         
     def __getitem__(self, index):
-        img = Image.open(self.images_path[index]).convert('RGB')
-        img = self.img_transform(img)
+        img_type = self.labels[index]
+        is_i2g = False
+        if img_type==0 and np.random.uniform() < 0.5:
+            img_src = cv2.imread(self.images_path[index])
+            img_src = cv2.resize(img_src,(256,256),interpolation= cv2.INTER_AREA)
+            points_src = cal_landmark(d_model,img_src)
+            if len(points_src) == 0:
+                pass
+            else:
+                tar_idx = index
+                points_dst = []
+                count = 0
+                # 还可以添加欧式距离的指标
+                while(self.video[tar_idx] == self.video[index] 
+                            or self.labels[tar_idx] == 1
+                            or len(points_dst)==0 ):
+                    tar_idx = torch.randint(len(self))
+                    img_dst = cv2.imread(self.images_path[tar_idx])
+                    img_dst= cv2.resize(img_dst,(256,256),interpolation= cv2.INTER_AREA)
+                    points_dst = cal_landmark(d_model,img_dst)
+                    count = count + 1
+                    if count == 5:
+                        break
+                if count < 5:
+                    is_i2g = True
+    
 
-        if self.mask_path[index] == 'None':
-            mask = np.ones((16,16))
-        else:
-            mask = np.load(self.mask_path[index])  #16,16
+        if is_i2g:
+            img, mask = blend_src2dst(img_src,img_dst,points_src,points_dst)
+            img = self.i2g_normalization(img)
+            label = 1
+            
+            mask = elasticdeform.deform_random_grid(mask,sigma=6,points=4)
+            mask = self.mask_trans(mask)
 
-        label = self.labels[index]
+            # 看看npy里的mask
+        else:        
+            img = Image.open(self.images_path[index]).convert('RGB')
+            img = self.img_transform(img)
+
+            if self.mask_path[index] == 'None':
+                mask = np.ones((16,16))
+            else:
+                mask = np.load(self.mask_path[index])  #16,16
+                # 数值可能要修改
+
+            label = self.labels[index]
+
         video_name = self.video[index]
         # I2G待添加
         return img, mask, label, video_name

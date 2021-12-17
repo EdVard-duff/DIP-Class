@@ -25,7 +25,7 @@ class Config(object):
     
     # baseline
     backbone = 'resnet34'
-    embed_size = 64 # 不确定
+    embed_size = 128 # 不确定
     loss_weight = 10
     deepfake_method_str = ['deepfakes','face2face','faceswap','neural']
     deepfake_method = 0 # one of [None,0,1,2,3]
