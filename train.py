@@ -91,6 +91,8 @@ def test(test_loader, net, criterion_of_class, criterion_of_consis, optimizer, e
 
     net.eval()
     test_loss = 0
+    correct = 0
+
     total = 0
     preds = []
     gts = []
@@ -104,12 +106,16 @@ def test(test_loader, net, criterion_of_class, criterion_of_consis, optimizer, e
             img, label = img.to(device), label.to(device)
 
             logits, consis_volumn = net(img)
+            _, pre_label = logits.max(1)
             logits = m(logits)
             preds.extend(logits.cpu().numpy())
             gts.extend(label.cpu().numpy())
             total += label.size(0)
             video_names.extend(video_name)
 
+            correct += pre_label.eq(label).sum().item()
+    
+    avg_acc = correct / total
     idx = [0]
     avr_preds = []
     avr_gts = []
@@ -142,7 +148,7 @@ def test(test_loader, net, criterion_of_class, criterion_of_consis, optimizer, e
         print('Update AUC checkpoint, best_auc={:.3f}'.format(best_auc))
 
     if ap > best_ap:
-        best_f1 = ap
+        best_ap = ap
         checkpoint_path = os.path.join(opt.checkpoint_dir, 'best-ap.pth')
         torch.save(net.state_dict(), checkpoint_path)
         print('Update AP checkpoint, best_ap={:.3f}'.format(best_ap))
@@ -154,13 +160,13 @@ def test(test_loader, net, criterion_of_class, criterion_of_consis, optimizer, e
     writer.add_scalar('Test/best_auc', best_auc, epoch)
     writer.add_scalar('Test/best_ap', best_ap, epoch)
     global test_results
-    test_results.append([epoch, auc, ap])
+    test_results.append([epoch, auc, ap, avg_acc])
 
 
 def write_test_results():
     global test_results
     csv_path = os.path.join(opt.exp_path, '..', '{}.csv'.format(opt.exp_name))
-    header = ['epoch', 'AUC', 'AP']
+    header = ['epoch', 'AUC', 'AP','ACC']
     epoches = list(range(len(test_results)))
     rows = [header] + test_results
     metrics = [[] for i in header]
