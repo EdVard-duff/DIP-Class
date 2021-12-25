@@ -1,8 +1,8 @@
 import os
 class Config(object):
     video_root = './dataset' 
-    origin_train = './dataset/origin_train.csv'
-    origin_test = './dataset/origin_test.csv'
+    origin_train = './dataset/original.csv'
+    origin_test = './dataset/original_test.csv'
 
     pretrained_model_path = './pretrained_models'
 
@@ -14,8 +14,8 @@ class Config(object):
     gpu_id = 0
     img_per_frame = 32 # 每个视频选取的图片数目
     base_lr = 5e-5
-    lr_milestones = [10, 16]
-    lr_gamma = 0.1
+    lr_milestones = [10, 0]
+    lr_gamma = 0.3
     epochs = 150
     eval_freq = 1
     save_freq = 5
@@ -32,7 +32,7 @@ class Config(object):
 
     imageNet_normalization = True
 
-    prefix = backbone
+    prefix = backbone + str()
 
     if (deepfake_method != None) and \
         (isinstance(deepfake_method, int)) and \

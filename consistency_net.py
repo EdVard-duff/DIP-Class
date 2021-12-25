@@ -76,7 +76,7 @@ class SelfConsistNet(nn.Module):
         
         consistency_volume = torch.zeros(batch_size,256,256) # b, 256, 256
         for i in range(256):
-            consistency_volume[:,:,i] = torch.sum(embed_feature[:,:,i].unsqueeze_(2) * embed_feature,dim=1) / np.sqrt(opt.embed_size)
+            consistency_volume[:,:,i] = torch.sum(embed_feature[:,:,i].unsqueeze(2) * embed_feature,dim=1) / np.sqrt(opt.embed_size)
         consistency_volume = torch.sigmoid(consistency_volume)
 
         return prediction ,consistency_volume

@@ -137,3 +137,5 @@ tmp.npy
 code_v1/*
 dataset/*
 experiments/*
+data/
+data.tar.gz

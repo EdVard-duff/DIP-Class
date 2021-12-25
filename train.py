@@ -46,14 +46,16 @@ def train(train_loader, net, criterion_of_class, criterion_of_consis, optimizer,
         forward_time = time.time() - forward_time
 
         # 真实的一致性矩阵 
+        mask = mask.squeeze(1)
         mask = mask.flatten(1,2)
         gts_volumn = torch.zeros(opt.batch_size,256,256)
         for i in range(256):
-            gts_volumn[:,:,i] = 1- abs(mask[:,i].unsqueeze_(1)-mask)
+            gts_volumn[:,:,i] = 1- abs(mask[:,i].unsqueeze(1)-mask)
         classify_loss = criterion_of_class(logits, label) 
         consis_loss = criterion_of_consis(consis_volumn, gts_volumn)
 
         loss = classify_loss + opt.loss_weight * consis_loss
+
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -84,7 +86,7 @@ def train(train_loader, net, criterion_of_class, criterion_of_consis, optimizer,
         batch_time = time.time()
         fetchdata_time = time.time()
 
-def test(test_loader, net, criterion_of_class, criterion_of_consis, optimizer, epoch, device, writer, test_video):
+def test(test_loader, net, criterion_of_class, criterion_of_consis, optimizer, epoch, device, writer):
     global best_auc, best_ap
 
     net.eval()
@@ -108,23 +110,25 @@ def test(test_loader, net, criterion_of_class, criterion_of_consis, optimizer, e
             total += label.size(0)
             video_names.extend(video_name)
 
-    idx, start, end = 0, 0, 0
+    idx = [0]
     avr_preds = []
     avr_gts = []
-    for i, video in enumerate(video_names):
-        if video == test_video[idx]:
-            pass
+    img_num = len(video_names)
+
+    for i in range(1,img_num):
+        if video_names[i] != video_names[i-1]:
+            idx.append(i)
         else:
-            idx = idx + 1
-            end = i 
-            avr_preds.append(np.sum(preds[start:end],axis=0)/(end-start))
-            avr_gts.append(gts[start])
-            start = end  
-    avr_gts.append(gts[start])
-    avr_preds.append(np.sum(preds[start:],axis=0)/(len(preds)-start))
+            pass   
+
+    idx.append(img_num)
+
+    for i in range(1,len(idx)):
+        avr_preds.append(np.mean(preds[idx[i-1]:idx[i]],axis=0))
+        avr_gts.append(gts[idx[i-1]])
+    
     avr_preds = np.array(avr_preds)
-    #print(avr_preds)
-    #print(avr_gts)
+    print(avr_preds)
     auc, ap = Auc(avr_preds,avr_gts)
 
     print("Test on {} images, local:auc={:.3f},ap={:.3f}".format(total, auc, ap))
@@ -186,25 +190,6 @@ if __name__ == "__main__":
     net = SelfConsistNet().to(device)
     criterion_for_class = torch.nn.CrossEntropyLoss()
     criterion_for_consis = torch.nn.BCELoss()
-    # test_video_list 
-    test_video_list = []
-    test_video_path = os.path.join(opt.video_root,'origin_test.csv')
-    with open(test_video_path) as f:
-        reader = csv.reader(f)
-        reader = list(reader)
-        reader = reader[1:]
-        for row in reader:
-            test_video_list.append(row[0])
-
-    test_video_path = os.path.join(opt.video_root,
-                        opt.deepfake_method_str[opt.deepfake_method]+'_test.csv')
-    with open(test_video_path) as f:
-        reader = csv.reader(f)
-        reader = list(reader)
-        reader = reader[1:]
-        for row in reader:
-            test_video_list.append(row[0])
-    #print(test_video_list)
 
     optimizer = torch.optim.Adam(net.parameters(), opt.base_lr) # betas:Default
     # 待找合适的API
@@ -217,7 +202,7 @@ if __name__ == "__main__":
         train_loader = get_train_dataloader()
         train(train_loader, net, criterion_for_class, criterion_for_consis, optimizer, epoch, device, writer)
         if epoch == 0 or (epoch + 1) % opt.eval_freq == 0 or epoch == opt.epochs - 1:
-            test(test_loader, net, criterion_for_class, criterion_for_consis, optimizer, epoch, device, writer, test_video_list)
+            test(test_loader, net, criterion_for_class, criterion_for_consis, optimizer, epoch, device, writer)
             write_test_results()            
         lr_scheduler.step()
     print(( "=======  Training Finished.Best AUC={:.3f}, best AP={:.1%}========".format(best_auc, best_ap)))

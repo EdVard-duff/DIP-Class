@@ -1,3 +1,4 @@
+from os import path
 import re
 from collections import OrderedDict
 
@@ -14,7 +15,7 @@ import elasticdeform
 
 class dlib_model(object):
     detector = dlib.get_frontal_face_detector()
-    predictor = dlib.shape_predictor('I2G\shape_predictor_68_face_landmarks.dat')
+    predictor = dlib.shape_predictor('./I2G/shape_predictor_68_face_landmarks.dat')
 
 
 def cal_landmark(model,img):
@@ -91,7 +92,7 @@ def blend_src2dst(img_src,img_dst,points_src,points_dst):
     #img_dst_mono_grad = cv2.seamlessClone(img_dst_warped, img_dst,
     #                                    mask, center, cv2.MONOCHROME_TRANSFER)
 
-    return img_dst_mix_grad, mask[:,:,0]  #以及需要一个mask
+    return img_dst_mix_grad, mask #以及需要一个mask
 
 def draw_delaunay(img,shape):
     rect = (0, 0, 256,256)
@@ -210,14 +211,20 @@ d_model = dlib_model()
 
 if __name__ == '__main__':
     #img = dlib.load_rgb_image(r'I2G\faces.jpg')
-    img_src = cv2.imread(r'I2G\man7.jpg')
-    img_dst = cv2.imread(r'I2G\man0.jpg')
+    img_src = cv2.imread('./I2G/man1.jpg')
+    img_dst = cv2.imread('./I2G/man0.jpg')
     img_src = cv2.resize(img_src,(256,256),interpolation= cv2.INTER_AREA)
     img_dst= cv2.resize(img_dst,(256,256),interpolation= cv2.INTER_AREA)
 
     points_src = cal_landmark(d_model,img_src)
     points_dst = cal_landmark(d_model,img_dst)
-    # 检查空的情况，while
+    print(len(points_dst))
+    print(len(points_src))
+    img_dst_mix_grad, mask = blend_src2dst(img_src,img_dst,points_src,points_dst)
+    print(mask.shape)
+    '''
+    
+     # 检查空的情况，while
     dis = if_similar(points_dst,points_src) # 看情况决定使用
     print(dis)
     img_dst_mix_grad, mask = blend_src2dst(img_src,img_dst,points_src,points_dst)
@@ -234,4 +241,6 @@ if __name__ == '__main__':
     cv2.imshow('i',mask)
     #print(mask)
     cv2.waitKey(0)
+    '''
+
     
