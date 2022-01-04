@@ -69,7 +69,7 @@ def blend_src2dst(img_src,img_dst,points_src,points_dst):
 
     rect = (0,0,256,256)
     # lst_delaunay_tri_pt_indices = cal_delaunay_tri(rect, hull_pt_dst) # 凸包三角剖分对应的顶点下标
-    all_tri_indices = cal_delaunay_tri(rect,points_dst[0:60])
+    all_tri_indices = cal_delaunay_tri(rect,points_dst[:])
         
     # 狄洛尼三角剖分仿射
     for tri_pt_indices in all_tri_indices:
@@ -85,14 +85,14 @@ def blend_src2dst(img_src,img_dst,points_src,points_dst):
 
     center = (rect[0] + rect[2] // 2, rect[1] + rect[3] // 2) # 包围矩形的中心
 
-    #img_dst_src_grad = cv2.seamlessClone(img_dst_warped, img_dst,
-    #                                    mask, center, cv2.NORMAL_CLONE)
+    img_dst_src_grad = cv2.seamlessClone(img_dst_warped, img_dst,
+                                        mask, center, cv2.NORMAL_CLONE)
     img_dst_mix_grad = cv2.seamlessClone(img_dst_warped, img_dst,
                                         mask, center, cv2.MIXED_CLONE)
-    #img_dst_mono_grad = cv2.seamlessClone(img_dst_warped, img_dst,
-    #                                    mask, center, cv2.MONOCHROME_TRANSFER)
+    img_dst_mono_grad = cv2.seamlessClone(img_dst_warped, img_dst,
+                                        mask, center, cv2.MONOCHROME_TRANSFER)
 
-    return img_dst_mix_grad, mask #以及需要一个mask
+    return img_dst_src_grad,img_dst_mix_grad, img_dst_mono_grad, mask #以及需要一个mask
 
 def draw_delaunay(img,shape):
     rect = (0, 0, 256,256)
@@ -211,8 +211,8 @@ d_model = dlib_model()
 
 if __name__ == '__main__':
     #img = dlib.load_rgb_image(r'I2G\faces.jpg')
-    img_src = cv2.imread('./I2G/man1.jpg')
-    img_dst = cv2.imread('./I2G/man0.jpg')
+    img_src = cv2.imread('./2.png')
+    img_dst = cv2.imread('./1.png')
     img_src = cv2.resize(img_src,(256,256),interpolation= cv2.INTER_AREA)
     img_dst= cv2.resize(img_dst,(256,256),interpolation= cv2.INTER_AREA)
 
@@ -220,8 +220,11 @@ if __name__ == '__main__':
     points_dst = cal_landmark(d_model,img_dst)
     print(len(points_dst))
     print(len(points_src))
-    img_dst_mix_grad, mask = blend_src2dst(img_src,img_dst,points_src,points_dst)
+    img_dst_src_grad,img_dst_mix_grad, img_dst_mono_grad, mask = blend_src2dst(img_src,img_dst,points_src,points_dst)
     print(mask.shape)
+    cv2.imshow('I',np.hstack([img_src,img_dst, img_dst_src_grad, img_dst_mix_grad, img_dst_mono_grad]))
+    cv2.imwrite('./test.png',np.hstack([img_src,img_dst, img_dst_src_grad, img_dst_mix_grad, img_dst_mono_grad]))
+    cv2.waitKey(0)
     '''
     
      # 检查空的情况，while
